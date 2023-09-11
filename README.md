@@ -1,3 +1,9 @@
+# 分工
+正常聊天+流式传输+网络搜索  朱旭
+网页总结+语音输入+语音输出  覃诗睿
+图片生成+图片分类  张泽卿
+文件聊天+函数调用  刘张毅
+
 # 打造你的AI助手
 
 本次大作业的任务是打造专属于你的AI助手。我们会首先在自己的电脑上配置运行语言模型，文生图模型，文转音模型，音转文模型，利用这些模型提供的能力，我们接着实现一个可以交互的AI助手，他能够跟我们聊天，能够生成图片，能够听懂发给他的语音，也能够通过语音进行回答，能够总结文件内容，还能进行图像分类。具体来说，我们会首先使用[LocalAI](https://localai.io/basics/getting_started/)在本机上配置运行各个模型，LocalAI会为我们提供各个模型能力的[API](https://localai.io/features/)，我们会用到[语言生成API](https://localai.io/features/text-generation/)，[图片生成API](https://localai.io/features/image-generation/)，[语音转文字API](https://localai.io/features/audio-to-text/)，[文字转语音API](https://localai.io/features/text-to-audio/)，[函数调用API](https://localai.io/features/text-to-audio/)。我们会将这些API接入AI助手，其中交互界面我们使用[gradio](https://www.gradio.app/)实现，类似下图。我们可以在文本框里输入文字，回车发送文字，AI助手会进行回复。我们也可以输入特定指令，如"/image A cute baby sea otter"，让AI助手为我们生成一张可爱的海獭宝宝图片。我们也可以上传文件，让AI助手根据文件内容回答我们的问题。我们也可以点击Clear的按钮清空聊天记录。下面我们会介绍如何运行起AI助手以及我们需要完成的功能。
@@ -65,7 +71,7 @@ curl http://localhost:8080/models
 {"object":"list","data":[{"id":"gpt-3.5-turbo","object":"model"},{"id":"openllama","object":"model"},{"id":"stablediffusion","object":"model"},{"id":"whisper-1","object":"model"},{"id":"en-us-blizzard_lessac-medium.onnx","object":"model"},{"id":"tmp-AutoencoderKL-encoder-256-256-fp16.param","object":"model"}]}
 ```
 
-检测是否能正常调用API
+检测是否能正常调用API(这里可能无法正常输出)
 
 ```bash
 curl http://localhost:8080/v1/chat/completions -H "Content-Type: application/json" -d '{
