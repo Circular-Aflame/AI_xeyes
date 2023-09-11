@@ -1,6 +1,7 @@
 import gradio as gr
 import os
 import time
+from chat import chat
 
 # Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 
@@ -8,7 +9,9 @@ messages = []
 current_file_text = None
 
 def add_text(history, text):
+    global messages
     history = history + [(text, None)]
+    messages = messages + [{"role":"user","content":text}]
     return history, gr.update(value="", interactive=False)
 
 
@@ -18,8 +21,10 @@ def add_file(history, file):
 
 
 def bot(history):
-    response = "**That's cool!**"
+    global messages
+    response = chat(messages)
     history[-1][1] = response
+    messages = messages + [{"role":"assistant","content":response}]
     return history
 
 with gr.Blocks() as demo:
