@@ -2,6 +2,7 @@ import gradio as gr
 import os
 import time
 from chat import chat
+from search import search
 
 # Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 
@@ -24,9 +25,14 @@ def add_file(history, file):
 
 def bot(history):
     global messages
+    # 检查搜索指令
+    if "/search" in history[-1][0]:
+        query = history[-1][0].split("/search")[1].strip()  # 提取搜索查询
+        messages[-1]["content"] = search(query)  # 更新最后一条消息
+
     response = chat(messages)
     history[-1][1] = response
-    messages = messages + [{"role":"assistant","content":response}]
+    messages = messages + [{"role":"assistant","content":history[-1][1]}]
     return history
 
 with gr.Blocks() as demo:

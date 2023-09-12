@@ -1,18 +1,34 @@
 import os
 import requests
+import openai
+
+openai.api_key = "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"
 
 
 def chat(messages):
     print(messages)
+    # # 调用openai接口
+    # response = openai.ChatCompletion.create(
+    #     model='gpt-3.5-turbo',
+    #     messages=messages,
+    #     temperature=0.5,
+    #     stream=True,
+    # )
+
+    # for chunk in response:
+    #     print(chunk)
+
+    # return response
+
     response = requests.post(
         "http://166.111.80.169:8080/v1/chat/completions",
         json={
             "model": "gpt-3.5-turbo",
             "messages": messages,
-            "temperature": 0.7
+            "temperature": 0.5,
         }
     )
-    
+
     if response.status_code == 200:
         try:
             data = response.json()
@@ -22,5 +38,5 @@ def chat(messages):
             print("Error parsing JSON response:", e)
     else:
         print("API request failed with status code:", response.status_code)
-    
+
     return "An error occurred"
