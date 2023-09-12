@@ -6,7 +6,7 @@ def search(content: str):
     params = {
         "engine": "bing",
         "q": content,
-        "cc": "CN",
+        "cc": "US",
         "api_key": "32c56b4cd66a904bbf0d8c104b3be47e5549a802e3315c675e7699a4abee823b"
     }
 
@@ -29,6 +29,6 @@ def search(content: str):
     return f"Please answer {content} based on the search result: \n\n{search_results}"
 
 if __name__ == "__main__":
-    search_query = "Sun Wukong"  # 你要搜索的内容
+    search_query = "我"  # 你要搜索的内容
     search_results = search(search_query)
     print(search_results)
