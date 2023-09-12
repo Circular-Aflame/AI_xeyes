@@ -16,7 +16,9 @@ def add_text(history, text):
 
 
 def add_file(history, file):
+    global messages
     history = history + [((file.name,), None)]
+    messages = messages + [{"role":"user","content":file.name}]
     return history
 
 
