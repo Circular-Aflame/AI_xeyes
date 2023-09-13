@@ -5,6 +5,9 @@ from chat import chat
 from search import search
 from stt import audio2text
 from tts import text2audio
+from pdf import generate_summary
+from pdf import generate_text
+from pdf import generate_answer
 
 # Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 
@@ -26,6 +29,29 @@ def add_file(history, file):
         if text:
             messages = messages + [{"role":"user","content": text}]
     # 语音输入
+
+    elif file.name.endswith('.txt'):
+        fin = open(file.name, 'r')
+        global current_file_text
+        current_file_text = ''
+        while True:
+            line = fin.readline()
+            if not line:
+                break
+            current_file_text += line
+        fin.close()
+        if current_file_text:
+            summary_prompt = generate_summary(current_file_text)
+            messages = messages + [{'role': 'user', 'content': summary_prompt}]
+            print(messages)
+            history[-1] = (history[-1][0], '')
+            response = generate_text(summary_prompt)
+            for character in response:
+                history[-1] = (history[-1][0], history[-1][1] + character)
+                time.sleep(0.05)
+                history[-1] = (history[-1][0], history[-1][1].replace('\\n', '\n'))
+                yield history
+            messages = messages + [{"role":"assistant","content":history[-1][1]}]
     return history
 
 
@@ -46,6 +72,25 @@ def bot(history):
         history[-1] = (history[-1][0], (audio_response,))
         #print(history)
         yield history
+
+    elif '/file' in history[-1][0]:
+        query = history[-1][0].split('/file')[1].strip()
+        if query:
+            question = generate_answer(current_file_text, query)
+            messages[-1]['content'] = question
+            history[-1][1]=""
+            response = generate_text(messages)
+            for character in response:
+                history[-1][1] += character
+                time.sleep(0.05)
+                history[-1][1]=history[-1][1].replace("\\n","\n")
+                yield history
+            messages = messages + [{"role":"assistant","content":history[-1][1]}]
+        else:
+            messages[-1]['content'] = query
+            history[-1][1] = ''
+            messages = messages + [{'role': 'assistant', 'content': ''}]
+
     else:
         # 检查搜索指令
         if "/search" in history[-1][0]:
