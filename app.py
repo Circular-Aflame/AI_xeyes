@@ -14,28 +14,25 @@ current_file_text = None
 def add_text(history, text):
     global messages
     history = history + [(text, None)]
-    print(history)
     messages = messages + [{"role":"user","content":text}]
     return history, gr.update(value="", interactive=False)
 
 def add_file(history, file):
     global messages
     history = history + [((file.name,), None)]
-    print(file.name)
     # 语音输入：当选择文件为wav文件时执行下面操作
     if file.name.endswith(".wav"):
         text = audio2text(file.name)
         if text:
             messages = messages + [{"role":"user","content": text}]
     # 语音输入
-    print(history)
     return history
 
 
 def bot(history):
     global messages
     if "/audio" in history[-1][0]:
-        '''query = history[-1][0].split("/audio")[1].strip()  # 提取文本内容
+        query = history[-1][0].split("/audio")[1].strip()  # 提取文本内容
         if query:
             messages[-1]["content"] = query
         response = chat(messages)
@@ -45,9 +42,9 @@ def bot(history):
             audio_text = audio_text.replace("\\n","\n")
         print(audio_text)
         audio_response = text2audio(audio_text)
-        messages = messages + [{"role":"assistant","content": audio_text}]'''
-        history[-1] = (history[-1][0], ('C:\\Users\\23800\\Desktop\\AI大作业\\AI_xeyes-main\\output.wav',))
-        print(history)
+        messages = messages + [{"role":"assistant","content": audio_text}]
+        history[-1] = (history[-1][0], (audio_response,))
+        #print(history)
         return history
     else:
         # 检查搜索指令
@@ -60,7 +57,7 @@ def bot(history):
             history[-1][1] += character
             time.sleep(0.05)
             history[-1][1]=history[-1][1].replace("\\n","\n")
-            yield history
+            #yield history
         messages = messages + [{"role":"assistant","content":history[-1][1]}]
         return history
 
