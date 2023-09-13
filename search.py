@@ -29,6 +29,6 @@ def search(content: str):
     return f"Please answer {content} based on the search result: \n\n{search_results}"
 
 if __name__ == "__main__":
-    search_query = "我"  # 你要搜索的内容
+    search_query = "Sun Wukong"  # 你要搜索的内容
     search_results = search(search_query)
     print(search_results)
