@@ -8,6 +8,7 @@ from tts import text2audio
 from pdf import generate_summary
 from pdf import generate_text
 from pdf import generate_answer
+from fetch import fetch
 
 # Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 
@@ -67,7 +68,7 @@ def bot(history):
         history[-1] = (history[-1][0], (audio_response,))
         #print(history)
         yield history
-
+        
     elif '/file' in history[-1][0] or isFile:
         if isFile:
             print(messages)
@@ -99,10 +100,14 @@ def bot(history):
                 messages[-1]['content'] = query
                 history[-1][1] = ''
                 messages = messages + [{'role': 'assistant', 'content': ''}]
-    
-    else:
+    else:       
+        # 网页总结指令
+        if "/fetch" in history[-1][0]:
+            query = history[-1][0].split("/fetch")[1].strip()
+            messages[-1]["content"] = fetch(query)
+
         # 检查搜索指令
-        if "/search" in history[-1][0]:
+        elif "/search" in history[-1][0]:
             query = history[-1][0].split("/search")[1].strip()  # 提取搜索查询
             messages[-1]["content"] = search(query)  # 更新最后一条消息   
         history[-1][1]=""

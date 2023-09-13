@@ -21,7 +21,8 @@ def chat(messages):
     # return response
 
     response = requests.post(
-        "http://166.111.80.169:8080/v1/chat/completions",
+        #"http://166.111.80.169:8080/v1/chat/completions",
+        "http://localhost:8080/v1/chat/completions",
         json={
             "model": "gpt-3.5-turbo",
             "messages": messages,
