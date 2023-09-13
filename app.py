@@ -13,6 +13,7 @@ from pdf import generate_answer
 
 messages = []
 current_file_text = None
+isFile = False
 
 def add_text(history, text):
     global messages
@@ -43,20 +44,14 @@ def add_file(history, file):
         if current_file_text:
             summary_prompt = generate_summary(current_file_text)
             messages = messages + [{'role': 'user', 'content': summary_prompt}]
-            print(messages)
-            history[-1] = (history[-1][0], '')
-            response = generate_text(summary_prompt)
-            for character in response:
-                history[-1] = (history[-1][0], history[-1][1] + character)
-                time.sleep(0.05)
-                history[-1] = (history[-1][0], history[-1][1].replace('\\n', '\n'))
-                yield history
-            messages = messages + [{"role":"assistant","content":history[-1][1]}]
+            global isFile
+            isFile = True
     return history
 
 
 def bot(history):
     global messages
+    global isFile
     if "/audio" in history[-1][0]:
         query = history[-1][0].split("/audio")[1].strip()  # 提取文本内容
         if query:
@@ -73,24 +68,38 @@ def bot(history):
         #print(history)
         yield history
 
-    elif '/file' in history[-1][0]:
-        query = history[-1][0].split('/file')[1].strip()
-        if query:
-            question = generate_answer(current_file_text, query)
-            messages[-1]['content'] = question
-            history[-1][1]=""
-            response = generate_text(messages)
+    elif '/file' in history[-1][0] or isFile:
+        if isFile:
+            print(messages)
+            history[-1] = (history[-1][0], '')
+            response = generate_text(messages[-1]['content'])
             for character in response:
-                history[-1][1] += character
+                history[-1] = (history[-1][0], history[-1][1] + character)
                 time.sleep(0.05)
-                history[-1][1]=history[-1][1].replace("\\n","\n")
+                history[-1] = (history[-1][0], history[-1][1].replace('\\n', '\n'))
                 yield history
             messages = messages + [{"role":"assistant","content":history[-1][1]}]
+            isFile = False
         else:
-            messages[-1]['content'] = query
-            history[-1][1] = ''
-            messages = messages + [{'role': 'assistant', 'content': ''}]
-
+            print('??')
+            query = history[-1][0].split('/file')[1].strip()
+            if query:
+                question = generate_answer(current_file_text, query)
+                messages[-1]['content'] = question
+                print(messages)
+                history[-1][1]=""
+                response = generate_text(question)
+                for character in response:
+                    history[-1][1] += character
+                    time.sleep(0.05)
+                    history[-1][1]=history[-1][1].replace("\\n","\n")
+                    yield history
+                messages = messages + [{"role":"assistant","content":history[-1][1]}]
+            else:
+                messages[-1]['content'] = query
+                history[-1][1] = ''
+                messages = messages + [{'role': 'assistant', 'content': ''}]
+    
     else:
         # 检查搜索指令
         if "/search" in history[-1][0]:
