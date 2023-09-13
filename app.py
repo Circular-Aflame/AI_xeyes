@@ -40,7 +40,7 @@ def bot(history):
         for character in response:
             audio_text += character
             audio_text = audio_text.replace("\\n","\n")
-        print(audio_text)
+        #print(audio_text)
         audio_response = text2audio(audio_text)
         messages = messages + [{"role":"assistant","content": audio_text}]
         history[-1] = (history[-1][0], (audio_response,))
