@@ -3,6 +3,8 @@ import os
 import time
 from chat import chat
 from search import search
+from stt import audio2text
+from tts import text2audio
 
 # Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 
@@ -12,33 +14,56 @@ current_file_text = None
 def add_text(history, text):
     global messages
     history = history + [(text, None)]
+    print(history)
     messages = messages + [{"role":"user","content":text}]
     return history, gr.update(value="", interactive=False)
-
 
 def add_file(history, file):
     global messages
     history = history + [((file.name,), None)]
-    messages = messages + [{"role":"user","content":file.name}]
+    print(file.name)
+    # 语音输入：当选择文件为wav文件时执行下面操作
+    if file.name.endswith(".wav"):
+        text = audio2text(file.name)
+        if text:
+            messages = messages + [{"role":"user","content": text}]
+    # 语音输入
+    print(history)
     return history
 
 
 def bot(history):
     global messages
-    # 检查搜索指令
-    if "/search" in history[-1][0]:
-        query = history[-1][0].split("/search")[1].strip()  # 提取搜索查询
-        messages[-1]["content"] = search(query)  # 更新最后一条消息
+    if "/audio" in history[-1][0]:
+        '''query = history[-1][0].split("/audio")[1].strip()  # 提取文本内容
+        if query:
+            messages[-1]["content"] = query
+        response = chat(messages)
+        audio_text = ""
+        for character in response:
+            audio_text += character
+            audio_text = audio_text.replace("\\n","\n")
+        print(audio_text)
+        audio_response = text2audio(audio_text)
+        messages = messages + [{"role":"assistant","content": audio_text}]'''
+        history[-1] = (history[-1][0], ('C:\\Users\\23800\\Desktop\\AI大作业\\AI_xeyes-main\\output.wav',))
+        print(history)
+        return history
+    else:
+        # 检查搜索指令
+        if "/search" in history[-1][0]:
+            query = history[-1][0].split("/search")[1].strip()  # 提取搜索查询
+            messages[-1]["content"] = search(query)  # 更新最后一条消息   
+        history[-1][1]=""
+        response = chat(messages)
+        for character in response:
+            history[-1][1] += character
+            time.sleep(0.05)
+            history[-1][1]=history[-1][1].replace("\\n","\n")
+            yield history
+        messages = messages + [{"role":"assistant","content":history[-1][1]}]
+        return history
 
-    history[-1][1]=""
-    response = chat(messages)
-    for character in response:
-        history[-1][1] += character
-        time.sleep(0.05)
-        history[-1][1]=history[-1][1].replace("\\n","\n")
-        yield history
-    messages = messages + [{"role":"assistant","content":history[-1][1]}]
-    return history
 
 with gr.Blocks() as demo:
     chatbot = gr.Chatbot(
