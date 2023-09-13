@@ -45,7 +45,7 @@ def bot(history):
         messages = messages + [{"role":"assistant","content": audio_text}]
         history[-1] = (history[-1][0], (audio_response,))
         #print(history)
-        return history
+        yield history
     else:
         # 检查搜索指令
         if "/search" in history[-1][0]:
@@ -57,9 +57,8 @@ def bot(history):
             history[-1][1] += character
             time.sleep(0.05)
             history[-1][1]=history[-1][1].replace("\\n","\n")
-            #yield history
+            yield history
         messages = messages + [{"role":"assistant","content":history[-1][1]}]
-        return history
 
 
 with gr.Blocks() as demo:
