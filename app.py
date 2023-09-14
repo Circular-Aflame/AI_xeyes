@@ -5,13 +5,21 @@ from chat import chat
 from search import search
 from stt import audio2text
 from tts import text2audio
+from pdf import generate_summary
+from pdf import generate_text
+from pdf import generate_answer
 from fetch import fetch
 from function import function_calling
 
+from fetch import fetch
+from image_generate import image_generate
+from mnist import image_classification
 # Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 
 messages = []
 current_file_text = None
+isFile = False
+isimage =False
 
 def add_text(history, text):
     global messages
@@ -21,6 +29,7 @@ def add_text(history, text):
 
 def add_file(history, file):
     global messages
+    global isimage
     history = history + [((file.name,), None)]
     # 语音输入：当选择文件为wav文件时执行下面操作
     if file.name.endswith(".wav"):
@@ -28,11 +37,37 @@ def add_file(history, file):
         if text:
             messages = messages + [{"role":"user","content": text}]
     # 语音输入
+
+    elif file.name.endswith('.txt'):
+        fin = open(file.name, 'r')
+        global current_file_text
+        current_file_text = ''
+        while True:
+            line = fin.readline()
+            if not line:
+                break
+            current_file_text += line
+        fin.close()
+        if current_file_text:
+            summary_prompt = generate_summary(current_file_text)
+            messages = messages + [{'role': 'user', 'content': summary_prompt}]
+            global isFile
+            isFile = True
+    elif file.name.endswith(".png"):
+        # 调用image_classification函数获取分类结果
+        classification_result = image_classification(file)
+        essages = messages + [{"role":"user","content":(file.name,)}]
+        # 将分类结果添加到messages中
+        if classification_result:
+            messages = messages + [{"role":"assistant","content":classification_result}]
+            isimage=True
+    # 语音输入
     return history
 
 
 def bot(history):
     global messages
+    global isFile
     if "/audio" in history[-1][0]:
         query = history[-1][0].split("/audio")[1].strip()  # 提取文本内容
         if query:
@@ -48,6 +83,40 @@ def bot(history):
         history[-1] = (history[-1][0], (audio_response,))
         #print(history)
         yield history
+
+        
+    elif '/file' in history[-1][0] or isFile:
+        if isFile:
+            print(messages)
+            history[-1] = (history[-1][0], '')
+            response = generate_text(messages[-1]['content'])
+            for character in response:
+                history[-1] = (history[-1][0], history[-1][1] + character)
+                time.sleep(0.05)
+                history[-1] = (history[-1][0], history[-1][1].replace('\\n', '\n'))
+                yield history
+            messages = messages + [{"role":"assistant","content":history[-1][1]}]
+            isFile = False
+        else:
+            print('??')
+            query = history[-1][0].split('/file')[1].strip()
+            if query:
+                question = generate_answer(current_file_text, query)
+                messages[-1]['content'] = question
+                print(messages)
+                history[-1][1]=""
+                response = generate_text(question)
+                for character in response:
+                    history[-1][1] += character
+                    time.sleep(0.05)
+                    history[-1][1]=history[-1][1].replace("\\n","\n")
+                    yield history
+                messages = messages + [{"role":"assistant","content":history[-1][1]}]
+            else:
+                messages[-1]['content'] = query
+                history[-1][1] = ''
+                messages = messages + [{'role': 'assistant', 'content': ''}]
+
 
     elif '/function' in history[-1][0]:
         query = history[-1][0].split('/function')[1].strip()
@@ -68,6 +137,24 @@ def bot(history):
             messages = messages + [{"role":"assistant","content":history[-1][1]}]
 
 
+
+    elif "/image" in history[-1][0] or isimage:
+        # 提取用户发送的/image content命令中的内容
+        if "/image" in history[-1][0]:
+            content = history[-1][0].split("/image")[1].strip()
+            if content:
+                # 调用image_generate函数生成图片，并获取生成的图片URL
+                image_url = image_generate(content)
+                # 将生成的图片URL添加到AI助手的回复中
+            messages = messages + [{"role": "assistant", "content": image_url}]
+            history[-1] = (history[-1][0], (image_url,))
+            yield history
+        elif isimage:
+            print(1)
+            print(messages)
+            pic_response=messages[-1]['content']
+            history[-1] = (history[-1][0],(pic_response))
+            yield history
     else:       
         # 网页总结指令
         if "/fetch" in history[-1][0]:

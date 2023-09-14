@@ -6,12 +6,13 @@ import openai
 
 todo_list = []
 
-openai.api_key = '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'
+openai.api_key = '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'
+
 
 def lookup_location_id(location: str):
     response = requests.get(
-        url = 'https://geoapi.qweather.com/v2/city/lookup',
-        params = {
+        url='https://geoapi.qweather.com/v2/city/lookup',
+        params={
             'location': location,
             'key': '7f5fef3693144725a23091d908c1b1f1'
         },
@@ -22,13 +23,11 @@ def lookup_location_id(location: str):
 
 def get_current_weather(location: str):
     location_id = lookup_location_id(location)
-    response = requests.get(
-        url = 'https://devapi.qweather.com/v7/weather/now',
-        params = {
-            'key': '7f5fef3693144725a23091d908c1b1f1',
-            'location': location_id,
-        }
-    )
+    response = requests.get(url='https://devapi.qweather.com/v7/weather/now',
+                            params={
+                                'key': '7f5fef3693144725a23091d908c1b1f1',
+                                'location': location_id,
+                            })
     weather_info = json.loads(response.text)
     return f"Temperature: {weather_info['now']['feelsLike']} Description: {weather_info['now']['text']} Humidity: {weather_info['now']['humidity']}"
 
@@ -51,36 +50,6 @@ def function_calling(messages: List[Dict]):
         'add_todo': add_todo,
     }
 
-    # functions = [
-    #     {
-    #         'name': 'get_current_weather',
-    #         'description': 'Get the current weather in a given location',
-    #         'parameters': {
-    #             'type': 'object',
-    #             'properties': {
-    #                 'location': {
-    #                     'type': 'string',
-    #                     'description': 'The city and state',
-    #                 },
-    #             },
-    #             'required': 'loaction',
-    #         },
-    #     },
-    #     {
-    #         'name': 'add_todo',
-    #         'description': 'Add one thing to a to-do list',
-    #         'parameters': {
-    #             'type': 'object',
-    #             'properties': {
-    #                 'todo': {
-    #                     'type': 'string',
-    #                     'description': 'A thing planned to be done'
-    #                 },
-    #             },
-    #             'required': 'todo',
-    #         },
-    #     }
-    # ]
 
     response = requests.post(
         'http://localhost:8080/v1/chat/completions',
@@ -116,9 +85,10 @@ def function_calling(messages: List[Dict]):
                     },
 
                 ],
-            },
+            }
         }
     )
+
     print(json.loads(response.text))
     result_list = json.loads(json.loads(response.text)['choices'][0]['message']['content'])
     # response = openai.ChatCompletion.create(
@@ -131,10 +101,14 @@ def function_calling(messages: List[Dict]):
     function_arg = result_list['arguments']
     return function_repository[function_name](**function_arg)
 
+
 if __name__ == "__main__":
     # add_todo('walk')
     # print(add_todo('swim'))
-    messages = [{"role": "user", "content": "What's the weather like in Beijing?"}]
+    messages = [{
+        "role": "user",
+        "content": "What's the weather like in Beijing?"
+    }]
     response = function_calling(messages)
     print(response)
 
