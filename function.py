@@ -51,46 +51,84 @@ def function_calling(messages: List[Dict]):
         'add_todo': add_todo,
     }
 
-    functions = [
-        {
-            'name': 'get_current_weather',
-            'description': 'Get the current weather in a given location',
-            'parameters': {
-                'type': 'object',
-                'properties': {
-                    'location': {
-                        'type': 'string',
-                        'description': 'The city and state',
+    # functions = [
+    #     {
+    #         'name': 'get_current_weather',
+    #         'description': 'Get the current weather in a given location',
+    #         'parameters': {
+    #             'type': 'object',
+    #             'properties': {
+    #                 'location': {
+    #                     'type': 'string',
+    #                     'description': 'The city and state',
+    #                 },
+    #             },
+    #             'required': 'loaction',
+    #         },
+    #     },
+    #     {
+    #         'name': 'add_todo',
+    #         'description': 'Add one thing to a to-do list',
+    #         'parameters': {
+    #             'type': 'object',
+    #             'properties': {
+    #                 'todo': {
+    #                     'type': 'string',
+    #                     'description': 'A thing planned to be done'
+    #                 },
+    #             },
+    #             'required': 'todo',
+    #         },
+    #     }
+    # ]
+
+    response = requests.post(
+        'http://localhost:8080/v1/chat/completions',
+        json = {
+            'model': 'ggml-openllama.bin',
+            'messages': messages,
+            'temperature': 0.1,
+            'grammar_json_functions': {
+                'oneOf': [
+                    {
+                        'type': 'object',
+                        'properties': {
+                            'function': { 'const': 'get_current_weather' },
+                            'arguments': {
+                                'type': 'object',
+                                'properties': {
+                                    'location': { 'type': 'string' }
+                                }
+                            }
+                        },
                     },
-                },
-                'required': 'loaction',
-            },
-        },
-        {
-            'name': 'add_todo',
-            'description': 'Add one thing to a to-do list',
-            'parameters': {
-                'type': 'object',
-                'properties': {
-                    'todo': {
-                        'type': 'string',
-                        'description': 'A thing planned to be done'
+                    {
+                        'type': 'object',
+                        'properties': {
+                            'function': { 'const': 'add_todo' },
+                            'arguments': {
+                                'type': 'object',
+                                'properties': {
+                                    'todo': { 'type': 'string' }
+                                }
+                            }
+                        },
                     },
-                },
-                'required': 'todo',
+
+                ],
             },
         }
-    ]
-
-    response = openai.ChatCompletion.create(
-        model = 'ggml-openllama.bin',
-        messages = messages,
-        functions = functions,
-        function_calling = 'auto',
     )
-    
-    function_name = response['choices'][0]['message']['function_call']['name']
-    function_arg = json.loads(response['choices'][0]['message']['function_call']['arguments'])
+    print(json.loads(response.text))
+    result_list = json.loads(json.loads(response.text)['choices'][0]['message']['content'])
+    # response = openai.ChatCompletion.create(
+    #     model = 'ggml-openllama.bin',
+    #     messages = messages,
+    #     functions = functions,
+    #     function_calling = 'auto',
+    # )
+    function_name = result_list['function']
+    function_arg = result_list['arguments']
     return function_repository[function_name](**function_arg)
 
 if __name__ == "__main__":
