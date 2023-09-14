@@ -1,0 +1,6 @@
+HTTP/1.1 500 Internal Server Error
+Date: Tue, 12 Sep 2023 13:42:16 GMT
+Content-Type: application/json
+Content-Length: 91
+
+{"error":{"code":500,"message":"rpc error: code = Unknown desc = unimplemented","type":""}}
