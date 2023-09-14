@@ -5,15 +5,12 @@ from chat import chat
 from search import search
 from stt import audio2text
 from tts import text2audio
-<<<<<<< HEAD
 from pdf import generate_summary
 from pdf import generate_text
 from pdf import generate_answer
 from fetch import fetch
 from function import function_calling
 
-=======
->>>>>>> a812864072feb897a70218b41ed056c22bdda2b7
 from fetch import fetch
 from image_generate import image_generate
 from mnist import image_classification
@@ -21,10 +18,7 @@ from mnist import image_classification
 
 messages = []
 current_file_text = None
-<<<<<<< HEAD
 isFile = False
-=======
->>>>>>> a812864072feb897a70218b41ed056c22bdda2b7
 isimage =False
 
 def add_text(history, text):
