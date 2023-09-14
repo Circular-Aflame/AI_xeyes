@@ -4,8 +4,8 @@ import requests
 
 def image_generate(content):
     # 构建API请求的URL
-    api_url = "http://localhost:8080/v1/images/generations"
-    #api_url = "http://166.111.80.169:8080/v1/images/generations"
+    #api_url = "http://localhost:8080/v1/images/generations"
+    api_url = "http://166.111.80.169:8080/v1/images/generations"
     
     # 构建请求参数，将content作为描述图片的内容传递给API
     params = {

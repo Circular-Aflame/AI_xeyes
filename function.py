@@ -6,8 +6,6 @@ import openai
 
 todo_list = []
 
-openai.api_key = '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'
-
 
 def lookup_location_id(location: str):
     response = requests.get(
@@ -91,12 +89,7 @@ def function_calling(messages: List[Dict]):
 
     print(json.loads(response.text))
     result_list = json.loads(json.loads(response.text)['choices'][0]['message']['content'])
-    # response = openai.ChatCompletion.create(
-    #     model = 'ggml-openllama.bin',
-    #     messages = messages,
-    #     functions = functions,
-    #     function_calling = 'auto',
-    # )
+
     function_name = result_list['function']
     function_arg = result_list['arguments']
     return function_repository[function_name](**function_arg)
