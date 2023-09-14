@@ -56,7 +56,7 @@ def add_file(history, file):
     elif file.name.endswith(".png"):
         # 调用image_classification函数获取分类结果
         classification_result = image_classification(file)
-        essages = messages + [{"role":"user","content":(file.name,)}]
+        messages = messages + [{"role":"user","content":"a png"}]#(file.name,)}]
         # 将分类结果添加到messages中
         if classification_result:
             messages = messages + [{"role":"assistant","content":classification_result}]
@@ -68,6 +68,7 @@ def add_file(history, file):
 def bot(history):
     global messages
     global isFile
+    global isimage
     if "/audio" in history[-1][0]:
         query = history[-1][0].split("/audio")[1].strip()  # 提取文本内容
         if query:
@@ -83,8 +84,7 @@ def bot(history):
         history[-1] = (history[-1][0], (audio_response,))
         #print(history)
         yield history
-
-        
+  
     elif '/file' in history[-1][0] or isFile:
         if isFile:
             print(messages)
@@ -117,7 +117,6 @@ def bot(history):
                 history[-1][1] = ''
                 messages = messages + [{'role': 'assistant', 'content': ''}]
 
-
     elif '/function' in history[-1][0]:
         query = history[-1][0].split('/function')[1].strip()
         if (query):
@@ -135,9 +134,6 @@ def bot(history):
             messages[-1]['content'] = ''
             history[-1] = (history[-1][0], '')
             messages = messages + [{"role":"assistant","content":history[-1][1]}]
-
-
-
     elif "/image" in history[-1][0] or isimage:
         # 提取用户发送的/image content命令中的内容
         if "/image" in history[-1][0]:
@@ -150,17 +146,16 @@ def bot(history):
             history[-1] = (history[-1][0], (image_url,))
             yield history
         elif isimage:
-            print(1)
             print(messages)
             pic_response=messages[-1]['content']
             history[-1] = (history[-1][0],(pic_response))
+            isimage=False
             yield history
     else:       
         # 网页总结指令
         if "/fetch" in history[-1][0]:
             query = history[-1][0].split("/fetch")[1].strip()
             messages[-1]["content"] = fetch(query)
-            
         # 检查搜索指令
         elif "/search" in history[-1][0]:
             query = history[-1][0].split("/search")[1].strip()  # 提取搜索查询
