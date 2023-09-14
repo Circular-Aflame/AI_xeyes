@@ -6,6 +6,7 @@ from search import search
 from stt import audio2text
 from tts import text2audio
 from fetch import fetch
+from function import function_calling
 
 # Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 
@@ -47,6 +48,26 @@ def bot(history):
         history[-1] = (history[-1][0], (audio_response,))
         #print(history)
         yield history
+
+    elif '/function' in history[-1][0]:
+        query = history[-1][0].split('/function')[1].strip()
+        if (query):
+            messages[-1]['content'] = query
+            response = function_calling(messages)
+            history[-1] = (history[-1][0], '')
+            for character in response:
+                history[-1] = (history[-1][0], history[-1][1] + character)
+                time.sleep(0.05)
+                history[-1] = (history[-1][0], history[-1][1].replace("\\n","\n"))
+                yield history
+            messages = messages + [{"role":"assistant","content":history[-1][1]}]
+            
+        else:
+            messages[-1]['content'] = ''
+            history[-1] = (history[-1][0], '')
+            messages = messages + [{"role":"assistant","content":history[-1][1]}]
+
+
     else:       
         # 网页总结指令
         if "/fetch" in history[-1][0]:
