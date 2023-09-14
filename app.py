@@ -56,9 +56,10 @@ def add_file(history, file):
     elif file.name.endswith(".png"):
         # 调用image_classification函数获取分类结果
         classification_result = image_classification(file)
+        essages = messages + [{"role":"user","content":(file.name,)}]
         # 将分类结果添加到messages中
         if classification_result:
-            messages = messages + [{"role":"user","content":classification_result}]
+            messages = messages + [{"role":"assistant","content":classification_result}]
             isimage=True
     # 语音输入
     return history
