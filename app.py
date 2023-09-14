@@ -11,11 +11,15 @@ from pdf import generate_answer
 from fetch import fetch
 from function import function_calling
 
+from fetch import fetch
+from image_generate import image_generate
+from mnist import image_classification
 # Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 
 messages = []
 current_file_text = None
 isFile = False
+isimage =False
 
 def add_text(history, text):
     global messages
@@ -25,6 +29,7 @@ def add_text(history, text):
 
 def add_file(history, file):
     global messages
+    global isimage
     history = history + [((file.name,), None)]
     # 语音输入：当选择文件为wav文件时执行下面操作
     if file.name.endswith(".wav"):
@@ -48,6 +53,14 @@ def add_file(history, file):
             messages = messages + [{'role': 'user', 'content': summary_prompt}]
             global isFile
             isFile = True
+    elif file.name.endswith(".png"):
+        # 调用image_classification函数获取分类结果
+        classification_result = image_classification(file)
+        # 将分类结果添加到messages中
+        if classification_result:
+            messages = messages + [{"role":"user","content":classification_result}]
+            isimage=True
+    # 语音输入
     return history
 
 
@@ -124,12 +137,29 @@ def bot(history):
 
 
 
+    elif "/image" in history[-1][0] or isimage:
+        # 提取用户发送的/image content命令中的内容
+        if "/image" in history[-1][0]:
+            content = history[-1][0].split("/image")[1].strip()
+            if content:
+                # 调用image_generate函数生成图片，并获取生成的图片URL
+                image_url = image_generate(content)
+                # 将生成的图片URL添加到AI助手的回复中
+            messages = messages + [{"role": "assistant", "content": image_url}]
+            history[-1] = (history[-1][0], (image_url,))
+            yield history
+        elif isimage:
+            print(1)
+            print(messages)
+            pic_response=messages[-1]['content']
+            history[-1] = (history[-1][0],(pic_response))
+            yield history
     else:       
         # 网页总结指令
         if "/fetch" in history[-1][0]:
             query = history[-1][0].split("/fetch")[1].strip()
             messages[-1]["content"] = fetch(query)
-
+            
         # 检查搜索指令
         elif "/search" in history[-1][0]:
             query = history[-1][0].split("/search")[1].strip()  # 提取搜索查询
