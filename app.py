@@ -5,6 +5,9 @@ from chat import chat
 from search import search
 from stt import audio2text
 from tts import text2audio
+from pdf import generate_summary
+from pdf import generate_text
+from pdf import generate_answer
 from fetch import fetch
 from function import function_calling
 
@@ -12,6 +15,7 @@ from function import function_calling
 
 messages = []
 current_file_text = None
+isFile = False
 
 def add_text(history, text):
     global messages
@@ -28,11 +32,28 @@ def add_file(history, file):
         if text:
             messages = messages + [{"role":"user","content": text}]
     # 语音输入
+
+    elif file.name.endswith('.txt'):
+        fin = open(file.name, 'r')
+        global current_file_text
+        current_file_text = ''
+        while True:
+            line = fin.readline()
+            if not line:
+                break
+            current_file_text += line
+        fin.close()
+        if current_file_text:
+            summary_prompt = generate_summary(current_file_text)
+            messages = messages + [{'role': 'user', 'content': summary_prompt}]
+            global isFile
+            isFile = True
     return history
 
 
 def bot(history):
     global messages
+    global isFile
     if "/audio" in history[-1][0]:
         query = history[-1][0].split("/audio")[1].strip()  # 提取文本内容
         if query:
@@ -48,6 +69,40 @@ def bot(history):
         history[-1] = (history[-1][0], (audio_response,))
         #print(history)
         yield history
+
+        
+    elif '/file' in history[-1][0] or isFile:
+        if isFile:
+            print(messages)
+            history[-1] = (history[-1][0], '')
+            response = generate_text(messages[-1]['content'])
+            for character in response:
+                history[-1] = (history[-1][0], history[-1][1] + character)
+                time.sleep(0.05)
+                history[-1] = (history[-1][0], history[-1][1].replace('\\n', '\n'))
+                yield history
+            messages = messages + [{"role":"assistant","content":history[-1][1]}]
+            isFile = False
+        else:
+            print('??')
+            query = history[-1][0].split('/file')[1].strip()
+            if query:
+                question = generate_answer(current_file_text, query)
+                messages[-1]['content'] = question
+                print(messages)
+                history[-1][1]=""
+                response = generate_text(question)
+                for character in response:
+                    history[-1][1] += character
+                    time.sleep(0.05)
+                    history[-1][1]=history[-1][1].replace("\\n","\n")
+                    yield history
+                messages = messages + [{"role":"assistant","content":history[-1][1]}]
+            else:
+                messages[-1]['content'] = query
+                history[-1][1] = ''
+                messages = messages + [{'role': 'assistant', 'content': ''}]
+
 
     elif '/function' in history[-1][0]:
         query = history[-1][0].split('/function')[1].strip()
@@ -68,12 +123,13 @@ def bot(history):
             messages = messages + [{"role":"assistant","content":history[-1][1]}]
 
 
+
     else:       
         # 网页总结指令
         if "/fetch" in history[-1][0]:
             query = history[-1][0].split("/fetch")[1].strip()
             messages[-1]["content"] = fetch(query)
-            
+
         # 检查搜索指令
         elif "/search" in history[-1][0]:
             query = history[-1][0].split("/search")[1].strip()  # 提取搜索查询
